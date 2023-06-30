@@ -81,6 +81,7 @@ list(
 
 ```{r}
 #| label: setup-one-off-functions
+#| include: false
 
 # Create a quick and dirty kable with preset options
 # `.dataset` A dataframe or tibble object
