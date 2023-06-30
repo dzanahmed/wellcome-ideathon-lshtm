@@ -3,9 +3,9 @@
 **The Outbreak Outliers** - London School of Hygiene and Tropical Medicine
 
 ## Noticeboard
-
--   I have re-structured the project's layout based on the requirements from Wellcome and the suggestions made in [Cookiecutter Data Science](https://drivendata.github.io/cookiecutter-data-science/#cookiecutter-data-science) and in the paper by William Noble in [PLOS Computational Biology](https://doi.org/10.1371/journal.pcbi.1000424). See [Appendix A](#appendix-a) for a description about what each folder is meant for.
-    -   Please feel free to edit as needed.
+- You can find the initial data inspection analysis as jupyter notebook [here](https://github.com/dzanahmed/welcome-ideathon-lshtm/blob/main/notebooks/2023-06-29-wm-initial_data_inspection.ipynb)
+- PDF and HTML versions can be found on the [Google Drive](https://drive.google.com/drive/folders/1KqvLO_R7nze59G0euTbrdTeu7DDfmTak)
+    - Note that the HTML version may require downloading the files first.
 
 ## Quick Start
 
@@ -18,9 +18,12 @@ Also check the references folder
 
 Github repo for team The Outbreak Outliers (MSc HDS \@ LSTHM) - Wellcome Ideathon 2023
 
+The project's layout is based on the requirements from Wellcome and the suggestions made in [Cookiecutter Data Science](https://drivendata.github.io/cookiecutter-data-science/#cookiecutter-data-science) and in the paper by William Noble in [PLOS Computational Biology](https://doi.org/10.1371/journal.pcbi.1000424). See Appendix A bellow for a description about what each folder is meant for.
+
+
 ### Us
 
-[Gabriel](https://github.com/gabrielbattcock)\
+[Gabriel](https://github.com/gabrielbattcock)
 - Future Bollywood star in the making
 
 [Oliver](https://github.com/oliverodolin)
@@ -33,7 +36,7 @@ Github repo for team The Outbreak Outliers (MSc HDS \@ LSTHM) - Wellcome Ideatho
 
 ## APPENDICES
 
-### APPENDIX A {#appendix-a}
+### APPENDIX A
 
 ├── LICENSE ├── challenge.md \<- The challenge's background, objectives and questions.\
 ├── README.md \<- This file.\
