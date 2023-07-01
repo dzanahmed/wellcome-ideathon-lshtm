@@ -3,9 +3,20 @@
 **The Outbreak Outliers** - London School of Hygiene and Tropical Medicine
 
 ## Noticeboard
-- You can find the initial data inspection analysis as jupyter notebook [here](https://github.com/dzanahmed/welcome-ideathon-lshtm/blob/main/notebooks/2023-06-29-wm-initial_data_inspection.ipynb)
-- PDF and HTML versions can be found on the [Google Drive](https://drive.google.com/drive/folders/1KqvLO_R7nze59G0euTbrdTeu7DDfmTak)
-    - Note that the HTML version may require downloading the files first.
+
+-   **1st of July 2023**
+    -   You can now find `vax_tweets_v0.RDS`
+        -   This is a serialised version of the original data set with the following changes:
+            -   The following columns are added:
+                -   `tweet_id`, `roberta_loc_score`, `roberta_loc_guess`, `distilBERT_sentiment`, `distilBERT_score`
+            -   Three rows with only missing values were removed
+            -   The `date` column is already formatted as date
+            -   Square brackets were removed from the `hashtags` column
+        -   You can find it in data \> interim \> `vax_tweets_v0.RDS`
+-   **30th of June 2023**
+    -   You can find the initial data inspection analysis as jupyter notebook [here](https://github.com/dzanahmed/welcome-ideathon-lshtm/blob/main/notebooks/2023-06-29-wm-initial_data_inspection.ipynb)
+    -   PDF and HTML versions can be found on the [Google Drive](https://drive.google.com/drive/folders/1KqvLO_R7nze59G0euTbrdTeu7DDfmTak)
+        -   Note that the HTML version may require downloading the files first.
 
 ## Quick Start
 
@@ -20,11 +31,9 @@ Github repo for team The Outbreak Outliers (MSc HDS \@ LSTHM) - Wellcome Ideatho
 
 The project's layout is based on the requirements from Wellcome and the suggestions made in [Cookiecutter Data Science](https://drivendata.github.io/cookiecutter-data-science/#cookiecutter-data-science) and in the paper by William Noble in [PLOS Computational Biology](https://doi.org/10.1371/journal.pcbi.1000424). See Appendix A bellow for a description about what each folder is meant for.
 
-
 ### Us
 
-[Gabriel](https://github.com/gabrielbattcock)
-- Future Bollywood star in the making
+[Gabriel](https://github.com/gabrielbattcock) - Future Bollywood star in the making
 
 [Oliver](https://github.com/oliverodolin)
 
