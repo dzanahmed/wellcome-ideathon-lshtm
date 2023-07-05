@@ -39,10 +39,16 @@ keywords <- c(
 # Apply the criteria
 filtered_tweets <- vax_tweets_v0[grepl(paste(keywords, collapse = "|"),
                         vax_tweets_v0$text,
-                        ignore.case = T), ]
+                        ignore.case = T), ] |> mutate(filtered = T) |> relocate(filtered, .before=text)
 
 # Check what didn't pass the filter
-unfiltered_tweets <- vax_tweets_v0 |> anti_join(filtered_tweets, by = "tweet_id")
+unfiltered_tweets <- vax_tweets_v0 |> anti_join(filtered_tweets, by = "tweet_id") |> mutate(filtered = F) |> relocate(filtered, .before=text)
 
 # Output the filtered dataset
 filtered_tweets |> write_rds('data/interim/vax_tweets_v0_filtered.RDS')
+
+# Rbind them
+filtered_and_unfiltered <- filtered_tweets |> rbind(unfiltered_tweets) |> arrange(tweet_id)
+
+# And output to one
+filtered_and_unfiltered |> write_rds('data/interim/vax_tweets_v0_filtered_unfiltered.RDS')
