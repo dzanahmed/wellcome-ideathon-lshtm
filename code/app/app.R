@@ -6,63 +6,89 @@ library(bslib)
 library(forcats)
 
 
-# tweets <- readRDS("tweets.rds")
+tweets <- readRDS("tweets.rds")
 
 # Prepare the transformed data
-df <- tweets %>%
+df <- tweets %>% 
   group_by(date, VADER_label) %>%
   summarise(count = n()) %>%
   ungroup()
+
 
 topic_df <- tweets %>%
   group_by(date, topic) %>%
   summarise(count = n()) %>%
   ungroup()
 
+
+
+events <- data.frame(
+  event = c("WHO approve emergency BioNTech vaccine in Netherlands",
+            "COVISHIELD approved for use",
+            "Moderna vaccine approved for use in EU"
+            ),
+  date = as.Date(c(
+    "2020-12-18",
+    "2021-02-15",
+    "2021-04-30"
+  )
+  )
+)
+
+
 # Define UI
-ui <- page_sidebar(
-  title = "Sentiment Analysis",
-  sidebar = sidebar(
-    title = "Dashboard controls",
-    selectInput(
-      inputId = "label_filter",
-      label = "Select Sentiment Label",
-      choices = c("All", "Negative", "Positive"),
-      selected = "All"
+
+
+ui <- page_navbar(
+    title = "The Outbreak Outliars",
+    sidebar = sidebar(
+      title = "Dashboard controls",
+      selectInput(
+        inputId = "label_filter",
+        label = "Select Sentiment Label",
+        choices = c("All", "Negative", "Positive"),
+        selected = "All"
+      ),
+      # selectInput(
+      #   inputId = "topic_filter",
+      #   label = "Select Topic",
+      #   choices = c("All", unique(topic_df$topic)),
+      #   selected = "All"
+      # ),
+      sliderInput(
+        inputId = "date_range",
+        label = "Select Time Bounds",
+        min = min(ymd(tweets$date), na.rm = TRUE),
+        max = max(ymd(tweets$date), na.rm = TRUE),
+        value = c(min(ymd(tweets$date), na.rm = TRUE), max(ymd(tweets$date), na.rm = TRUE))
+      )
     ),
-    selectInput(
-      inputId = "topic_filter",
-      label = "Select Topic",
-      choices = c("All", unique(topic_df$topic)),
-      selected = "All"
+   nav_panel("Sentiment",
+   
+    
+    card(
+      width = 12,
+      status = "primary",
+      card_header("Sentiment Analysis"),
+      plotOutput("sentimentPlot")
     ),
-    sliderInput(
-      inputId = "date_range",
-      label = "Select Time Bounds",
-      min = min(tweets$date),
-      max = max(tweets$date),
-      value = c(min(tweets$date), max(tweets$date))
+    card(
+      width = 12,
+      status = "primary",
+      card_header("Topic modelling"),
+      plotOutput("topicPlot")
     )
   ),
+  nav_panel("Topic", "Page 2 content"),
+  
   theme = bs_theme(
     bootswatch = "darkly",
     base_font = font_google("Inter"),
     navbar_bg = "#2d2d2d"
-  ),
-  
-  card(
-    width = 12,
-    status = "primary",
-    card_header("Sentiment Analysis"),
-    plotOutput("sentimentPlot")
-  ),
-  card(
-    width = 12,
-    status = "primary",
-    card_header("Topic modelling"),
-    plotOutput("topicPlot")
   )
-)
+  )
+
+
 
 # Enable thematic
 thematic::thematic_shiny(font = "auto")
@@ -75,6 +101,7 @@ server <- function(input, output) {
   # Render the sentiment plot
   output$sentimentPlot <- renderPlot({
     filtered_df <- df
+    events <- events
     if (input$label_filter != "All") {
       filtered_df <- filtered_df %>%
         filter(VADER_label == input$label_filter)
@@ -106,14 +133,14 @@ server <- function(input, output) {
   output$topicPlot <- renderPlot({
     filtered_topic_df <- topic_df
     filtered_topic_df <- topic_df
-    if (input$topic_filter != "All") {
-      filtered_topic_df <- filtered_topic_df %>%
-        filter(topic == input$topic_filter)
-    }
+    # if (input$topic_filter != "All") {
+    #   filtered_topic_df <- filtered_topic_df %>%
+    #     filter(topic == input$topic_filter)
+    # }
     filtered_topic_df <- filtered_topic_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
 
-    topic_df %>% 
+    filtered_topic_df %>% 
       group_by(topic) %>% 
       summarise(val = n()) %>% 
       mutate(topic = fct_reorder(topic, val)) %>%
