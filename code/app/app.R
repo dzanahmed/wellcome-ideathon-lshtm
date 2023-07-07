@@ -6,9 +6,9 @@ library(bslib)
 library(forcats)
 
 
+# 
 tweets <- readRDS("tweets.rds")
 
-# tweets$date <- as.POSIXct(as.Date(tweets$date, )
 
 # Prepare the transformed data
 df <- tweets %>% 
@@ -48,15 +48,31 @@ ui <- page_navbar(
       selectInput(
         inputId = "label_filter",
         label = "Select Sentiment Label",
-        choices = c("All", "Negative", "Positive"),
+        choices = c("All", "Negative", "Positive", "Neutral"),
         selected = "All"
       ),
-      # selectInput(
-      #   inputId = "topic_filter",
-      #   label = "Select Topic",
-      #   choices = c("All", unique(topic_df$topic)),
+      
+      # This doesnt work is the box chose, needs to be fixed
+      
+      selectInput(
+        inputId = "topic_filter",
+        label = "Select Topic",
+        choices = c("Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5"),
+        selected = "All"
+      ),
+      
+      
+      # This is the box check for the sentiment but also requires changes in the output function 
+      # to work properly
+      
+      # checkboxGroupInput(
+      #   inputId = "label_filter",
+      #   label = "Select Sentiment Label",
+      #   choices = c("All", "Negative", "Positive", "Neutral"),
       #   selected = "All"
       # ),
+      
+      
       sliderInput(
         inputId = "date_range",
         label = "Select Time Bounds",
@@ -81,7 +97,13 @@ ui <- page_navbar(
       plotOutput("topicPlot")
     )
   ),
-  nav_panel("Topic", "Page 2 content"),
+  nav_panel("Topic", 
+            card(
+              width = 12,
+              status = "primary",
+              card_header("Topic modelling"),
+              plotOutput("topic_time")
+            )),
   
   theme = bs_theme(
     bootswatch = "darkly",
@@ -100,10 +122,12 @@ theme_set(theme_dark())
 
 # Define server
 server <- function(input, output) {
+  
   # Render the sentiment plot
   output$sentimentPlot <- renderPlot({
     filtered_df <- df
     events <- events
+    
     if (input$label_filter != "All") {
       filtered_df <- filtered_df %>%
         filter(VADER_label == input$label_filter)
@@ -112,11 +136,13 @@ server <- function(input, output) {
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
     ggplot(data = filtered_df, aes(x = date, y = count, color = VADER_label, group = VADER_label)) +
-      geom_line() +
+      geom_point() +
+      geom_smooth() +
+      # geom_line() +
       labs(x = "Date", y = "Count of Tweets") +
       scale_color_manual(
         values = c(Negative = "#ff4444", Positive = "#00C851"),
-        labels = c(Negative = "Negative", Positive = "Positive")
+        labels = c(Negative = "Negative", Positive = "Positive", Neutral = "Neutral")
       ) +
       # geom_vline(data = events, aes(xintecept = date)) + 
       theme(
@@ -136,6 +162,10 @@ server <- function(input, output) {
   output$topicPlot <- renderPlot({
     filtered_topic_df <- topic_df
     filtered_topic_df <- topic_df
+    
+# This is the function that filters the output to options selected from the box menu
+# Need to be fixed
+    
     # if (input$topic_filter != "All") {
     #   filtered_topic_df <- filtered_topic_df %>%
     #     filter(topic == input$topic_filter)
@@ -148,9 +178,44 @@ server <- function(input, output) {
       summarise(val = n()) %>% 
       mutate(topic = fct_reorder(topic, val)) %>%
       ggplot( aes(x=topic, y=val)) +
-      geom_bar(stat="identity", fill="#f68060", alpha=.6, width=.4) +
+      geom_bar(stat="identity", fill=c("#ff4444","#00C851","#FF8800","#FFC400","#4285F4"),
+               alpha=.6, width=.4) +
       coord_flip() +
       xlab("") +
+      theme(
+        legend.position = "bottom",
+        plot.background = element_rect(fill = "#2d2d2d"),
+        panel.background = element_rect(fill = "#2d2d2d"),
+        axis.text = element_text(color = "white"),
+        axis.title = element_text(color = "white"),
+        legend.text = element_text(color = "white"),
+        legend.title = element_text(color = "white"),
+        legend.background = element_rect(fill = "#2d2d2d", color = "#2d2d2d")
+      ) 
+  })
+
+  # Render the topic time series
+  output$topic_time <- renderPlot({
+    filtered_topic_df <- topic_df
+    filtered_topic_df <- topic_df
+    
+    # This is the function that filters the output to options selected from the box menu
+    # Need to be fixed
+    
+    if (input$topic_filter != "All") {
+      filtered_topic_df <- filtered_topic_df %>%
+        filter(topic == input$topic_filter)
+    }
+    filtered_topic_df <- filtered_topic_df %>%
+      filter(date >= input$date_range[1] & date <= input$date_range[2])
+    
+    ggplot(data = filtered_topic_df, aes(x = date, y = count, color = topic, group = topic)) +
+      geom_point() +
+      geom_smooth() +
+      labs(x = "Date", y = "Count of Tweets") +
+      scale_color_manual(
+        values = c(Negative = "#ff4444", Positive = "#00C851"),
+        labels = c(Negative = "Negative", Positive = "Positive")) +
       scale_color_manual(
         values = c(
           "Topic 1" = "#ff4444",
@@ -165,8 +230,7 @@ server <- function(input, output) {
           "Topic 3" = "Topic 3",
           "Topic 4" = "Topic 4",
           "Topic 5" = "Topic 5"
-        )
-      ) +
+        )) +
       theme(
         legend.position = "bottom",
         plot.background = element_rect(fill = "#2d2d2d"),
@@ -174,12 +238,12 @@ server <- function(input, output) {
         axis.text = element_text(color = "white"),
         axis.title = element_text(color = "white"),
         legend.text = element_text(color = "white"),
-        legend.title = element_text(color = "white"),
-        legend.background = element_rect(fill = "#2d2d2d", color = "#2d2d2d")
-      ) 
-  })
-}
+        legend.title = element_blank(),
+        legend.background = element_rect(fill = "#2d2d2d", color = "#2d2d2d"))
+    
+      }) 
+  }
+  
 
 # Run the Shiny app
 shinyApp(ui = ui, server = server)
-
