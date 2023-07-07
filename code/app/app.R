@@ -8,6 +8,8 @@ library(forcats)
 
 tweets <- readRDS("tweets.rds")
 
+# tweets$date <- as.POSIXct(as.Date(tweets$date, )
+
 # Prepare the transformed data
 df <- tweets %>% 
   group_by(date, VADER_label) %>%
@@ -116,6 +118,7 @@ server <- function(input, output) {
         values = c(Negative = "#ff4444", Positive = "#00C851"),
         labels = c(Negative = "Negative", Positive = "Positive")
       ) +
+      # geom_vline(data = events, aes(xintecept = date)) + 
       theme(
         legend.position = "bottom",
         plot.background = element_rect(fill = "#2d2d2d"),
