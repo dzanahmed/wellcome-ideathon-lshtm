@@ -52,3 +52,5 @@ filtered_and_unfiltered <- filtered_tweets |> rbind(unfiltered_tweets) |> arrang
 
 # And output to one
 filtered_and_unfiltered |> write_rds('data/interim/vax_tweets_v0_filtered_unfiltered.RDS')
+
+filtered_and_unfiltered |> write_csv('data/interim/vax_tweets_v0_filtered_unfiltered.csv')
