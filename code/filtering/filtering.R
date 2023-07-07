@@ -62,3 +62,5 @@ write_csv(sample, file='code/filtering/sample.csv')
 
 # And output to one
 filtered_and_unfiltered |> write_rds('data/interim/vax_tweets_v0_filtered_unfiltered.RDS')
+
+filtered_and_unfiltered |> write_csv('data/interim/vax_tweets_v0_filtered_unfiltered.csv')
