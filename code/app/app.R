@@ -16,9 +16,9 @@ df <- tweets %>%
   summarise(count = as.double(n()))%>%
   pivot_wider(names_from = VADER_label, values_from = count) %>%
   ungroup() %>% 
-  mutate(Positive = rollapply(Positive,7,mean,align='right',fill=NA),
-         Negative = rollapply(Negative,7,mean,align='right',fill=NA),
-         Neutral = rollapply(Neutral,7,mean,align='right',fill=NA)) %>% 
+  mutate(Positive = rollapply(Positive,7,mean,align='right',fill = 0, na.rm = T),
+         Negative = rollapply(Negative,7,mean,align='right',fill= 0 , na.rm = T ),
+         Neutral = rollapply(Neutral,7,mean,align='right',fill= 0, na.rm = T)) %>% 
   pivot_longer(cols =-date ) %>% 
   rename(avg = value,
          VADER_label = name) %>% 
@@ -107,11 +107,11 @@ ui <- page_navbar(
       
       # This doesnt work is the box chose, needs to be fixed
       
-      selectInput(
+      checkboxGroupInput(
         inputId = "topic_filter",
         label = "Select Topic",
-        choices = c("Topic 1", "Topic 2", "Topic 3", "Topic 4", "Topic 5"),
-        selected = "All"
+        choices = c(unique(topic_df$topic)),
+        selected = c(unique(topic_df$topic))
       ),
       
       
@@ -121,8 +121,8 @@ ui <- page_navbar(
       checkboxGroupInput(
         inputId = "label_filter",
         label = "Select Sentiment Label",
-        choices = c("All",unique(df$VADER_label)),
-        selected ="All"
+        choices = c(unique(df$VADER_label)),
+        selected = c(unique(df$VADER_label))
       ),
       
       
@@ -196,11 +196,10 @@ server <- function(input, output) {
     # }
     
     
-    if (input$label_filter != "All"){
-       
+    
        filtered_df <- filtered_df %>%
-         filter(VADER_label == input$label_filter)
-       }
+         filter(VADER_label %in% input$label_filter)
+      
         
        
     
@@ -238,10 +237,10 @@ server <- function(input, output) {
 # This is the function that filters the output to options selected from the box menu
 # Need to be fixed
     
-    # if (input$topic_filter != "All") {
-    #   filtered_topic_df <- filtered_topic_df %>%
-    #     filter(topic == input$topic_filter)
-    # }
+    
+    filtered_topic_df <- filtered_topic_df %>%
+        filter(topic %in% input$topic_filter)
+
     filtered_topic_df <- filtered_topic_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
 
@@ -274,10 +273,10 @@ server <- function(input, output) {
     # This is the function that filters the output to options selected from the box menu
     # Need to be fixed
     
-    if (input$topic_filter != "All") {
+    
       filtered_topic_df <- filtered_topic_df %>%
-        filter(topic == input$topic_filter)
-    }
+        filter(topic%in%input$topic_filter)
+  
     filtered_topic_df <- filtered_topic_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
