@@ -14,10 +14,22 @@ tweets <- readRDS("tweets.rds")
 df <- tweets %>% 
   group_by(date, VADER_label) %>%
   summarise(count = as.double(n()))%>%
-  pivot_wider(names_from = VADER_label, values_from = count) %>% 
-  mutate(pos_avg7 = zoo::rollmean(x = Positive,k = 7))
-  # 
-  ungroup()
+  pivot_wider(names_from = VADER_label, values_from = count) %>%
+  ungroup() %>% 
+  mutate(Positive = rollapply(Positive,7,mean,align='right',fill=NA),
+         Negative = rollapply(Negative,7,mean,align='right',fill=NA),
+         Neutral = rollapply(Neutral,7,mean,align='right',fill=NA)) %>% 
+  pivot_longer(cols =-date ) %>% 
+  rename(avg = value,
+         VADER_label = name) %>% 
+  left_join(tweets %>% 
+              group_by(date, VADER_label) %>%
+              summarise(count = as.double(n())), 
+            by = c("date", "VADER_label")
+  )
+  
+  
+
 
 
 topic_df <- tweets %>%
@@ -47,15 +59,15 @@ vbs <- list(
     value = "123",
     showcase = bs_icon("bar-chart"),
     theme_color = "danger",
-    height = "100px"
+    height = "120px"
     # p("The 1st detail")
   ),
   value_box(
-    title = "Something else", 
+    title = "Validated tweets", 
     value = "456",
     showcase = bs_icon("graph-up"),
     theme_color = "warning",
-    height = "100px"
+    height = "120px"
     # p("The 2nd detail"),
     # p("The 3rd detail")
   ),
@@ -71,7 +83,7 @@ vbs <- list(
 
 layout_column_wrap(
   width = "150px",
-  height = "100px",
+  height = "120px",
   !!!vbs
 )
 
@@ -125,7 +137,7 @@ ui <- page_navbar(
    nav_panel("Sentiment",
             layout_column_wrap(
                width = "150px",
-               height = "100px",
+               height = "120px",
                fill = FALSE,
                vbs[[1]], vbs[[2]]
              ),
@@ -195,11 +207,11 @@ server <- function(input, output) {
     filtered_df <- filtered_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
-    ggplot(data = filtered_df, aes(x = date, y = count, color = VADER_label, group = VADER_label)) +
-      geom_point() +
-      geom_smooth() +
-      # geom_line() +
-      labs(x = "Date", y = "Count of Tweets") +
+    ggplot(data = filtered_df, aes(x = date, color = VADER_label, group = VADER_label)) +
+      geom_point(aes(y =count), alpha = 0.5) +
+      # geom_smooth() +
+      geom_line(aes(y = avg)) +
+      labs(x = "Date", y = "Count of Tweets", color = "7-day rolling average") +
       scale_color_manual(
         values = c(Negative = "#ff4444", Positive = "#00C851", Neutral = "#FFdd00"),
         labels = c(Negative = "Negative", Positive = "Positive", Neutral = "Neutral")
