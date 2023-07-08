@@ -13,7 +13,10 @@ tweets <- readRDS("tweets.rds")
 # Prepare the transformed data
 df <- tweets %>% 
   group_by(date, VADER_label) %>%
-  summarise(count = n()) %>%
+  summarise(count = as.double(n()))%>%
+  pivot_wider(names_from = VADER_label, values_from = count) %>% 
+  mutate(pos_avg7 = zoo::rollmean(x = Positive,k = 7))
+  # 
   ungroup()
 
 
@@ -43,14 +46,18 @@ vbs <- list(
     title = "Total number of flags", 
     value = "123",
     showcase = bs_icon("bar-chart"),
-    p("The 1st detail")
+    theme_color = "danger",
+    height = "100px"
+    # p("The 1st detail")
   ),
   value_box(
-    title = "2nd value", 
+    title = "Something else", 
     value = "456",
     showcase = bs_icon("graph-up"),
-    p("The 2nd detail"),
-    p("The 3rd detail")
+    theme_color = "warning",
+    height = "100px"
+    # p("The 2nd detail"),
+    # p("The 3rd detail")
   ),
   value_box(
     title = "3rd value", 
@@ -64,7 +71,7 @@ vbs <- list(
 
 layout_column_wrap(
   width = "150px",
-  height = "50px",
+  height = "100px",
   !!!vbs
 )
 
@@ -79,12 +86,12 @@ ui <- page_navbar(
     title = "The Outbreak Outliars",
     sidebar = sidebar(
       title = "Dashboard controls",
-      selectInput(
-        inputId = "label_filter",
-        label = "Select Sentiment Label",
-        choices = c("All", "Negative", "Positive", "Neutral"),
-        selected = "All"
-      ),
+      # selectInput(
+      #   inputId = "label_filter",
+      #   label = "Select Sentiment Label",
+      #   choices = c("All", "Negative", "Positive", "Neutral"),
+      #   selected = "All"
+      # ),
       
       # This doesnt work is the box chose, needs to be fixed
       
@@ -99,12 +106,12 @@ ui <- page_navbar(
       # This is the box check for the sentiment but also requires changes in the output function 
       # to work properly
       
-      # checkboxGroupInput(
-      #   inputId = "label_filter",
-      #   label = "Select Sentiment Label",
-      #   choices = c("All", "Negative", "Positive", "Neutral"),
-      #   selected = "All"
-      # ),
+      checkboxGroupInput(
+        inputId = "label_filter",
+        label = "Select Sentiment Label",
+        choices = c("All",unique(df$VADER_label)),
+        selected ="All"
+      ),
       
       
       sliderInput(
@@ -117,7 +124,8 @@ ui <- page_navbar(
     ),
    nav_panel("Sentiment",
             layout_column_wrap(
-               width = "250px",
+               width = "150px",
+               height = "100px",
                fill = FALSE,
                vbs[[1]], vbs[[2]]
              ),
@@ -165,11 +173,25 @@ server <- function(input, output) {
   output$sentimentPlot <- renderPlot({
     filtered_df <- df
     events <- events
+   
+    # if (input$label_filter != "All") {
+    #   # filtered_df <- df[df$VADER_label %in% input$label_filter,]
+    #   # filtered_df
+    #   if(is.null(input$label_filter)){NULL}
+    #   
+    #     filtered_df <- filtered_df %>%
+    #     filter(VADER_label %in% input$label_filter)
+    # }
     
-    if (input$label_filter != "All") {
-      filtered_df <- filtered_df %>%
-        filter(VADER_label == input$label_filter)
-    }
+    
+    if (input$label_filter != "All"){
+       
+       filtered_df <- filtered_df %>%
+         filter(VADER_label == input$label_filter)
+       }
+        
+       
+    
     filtered_df <- filtered_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
