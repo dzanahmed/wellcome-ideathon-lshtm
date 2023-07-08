@@ -31,7 +31,6 @@ df <- tweets %>%
   
 
 
-
 topic_df <- tweets %>%
   group_by(date, topic) %>%
   summarise(count = n()) %>%
@@ -248,11 +247,28 @@ server <- function(input, output) {
       group_by(topic) %>% 
       summarise(val = n()) %>% 
       mutate(topic = fct_reorder(topic, val)) %>%
+      ungroup() %>% 
       ggplot( aes(x=topic, y=val)) +
-      geom_bar(stat="identity", fill=c("#ff4444","#00C851","#FF8800","#FFC400","#4285F4"),
+      geom_bar(stat="identity",
                alpha=.6, width=.4) +
       coord_flip() +
       xlab("") +
+      scale_color_manual(
+        values = c(
+          "Topic 1" = "#ff4444",
+          "Topic 2" = "#00C851",
+          "Topic 3" = "#FF8800",
+          "Topic 4" = "#FFC400",
+          "Topic 5" = "#4285F4"
+        ),
+        labels = c(
+          "Topic 1" = "Topic 1",
+          "Topic 2" = "Topic 2",
+          "Topic 3" = "Topic 3",
+          "Topic 4" = "Topic 4",
+          "Topic 5" = "Topic 5"
+        )) +
+      
       theme(
         legend.position = "bottom",
         plot.background = element_rect(fill = "#2d2d2d"),
