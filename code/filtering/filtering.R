@@ -50,5 +50,15 @@ filtered_tweets |> write_rds('data/interim/vax_tweets_v0_filtered.RDS')
 # Rbind them
 filtered_and_unfiltered <- filtered_tweets |> rbind(unfiltered_tweets) |> arrange(tweet_id)
 
+# Lets assess and classify
+set.seed(666)
+sample <- filtered_and_unfiltered |> sample_n(size=200) |> select(tweet_id, user_description, filtered, text, hashtags)
+
+sample$filtered |> summary()
+# 179 passed the filter, 21 did not
+
+write_csv(sample, file='code/filtering/sample.csv')
+
+
 # And output to one
 filtered_and_unfiltered |> write_rds('data/interim/vax_tweets_v0_filtered_unfiltered.RDS')
