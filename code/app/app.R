@@ -4,7 +4,7 @@ library(dplyr)
 library(lubridate)
 library(bslib)
 library(forcats)
-
+library(bsicons)
 
 # 
 tweets <- readRDS("tweets.rds")
@@ -36,6 +36,40 @@ events <- data.frame(
   )
   )
 )
+
+
+vbs <- list(
+  value_box(
+    title = "Total number of flags", 
+    value = "123",
+    showcase = bs_icon("bar-chart"),
+    p("The 1st detail")
+  ),
+  value_box(
+    title = "2nd value", 
+    value = "456",
+    showcase = bs_icon("graph-up"),
+    p("The 2nd detail"),
+    p("The 3rd detail")
+  ),
+  value_box(
+    title = "3rd value", 
+    value = "789",
+    showcase = bs_icon("pie-chart"),
+    p("The 4th detail"),
+    p("The 5th detail"),
+    p("The 6th detail")
+  )
+)
+
+layout_column_wrap(
+  width = "150px",
+  height = "50px",
+  !!!vbs
+)
+
+
+
 
 
 # Define UI
@@ -82,7 +116,11 @@ ui <- page_navbar(
       )
     ),
    nav_panel("Sentiment",
-   
+            layout_column_wrap(
+               width = "250px",
+               fill = FALSE,
+               vbs[[1]], vbs[[2]]
+             ),
     
     card(
       width = 12,
@@ -141,7 +179,7 @@ server <- function(input, output) {
       # geom_line() +
       labs(x = "Date", y = "Count of Tweets") +
       scale_color_manual(
-        values = c(Negative = "#ff4444", Positive = "#00C851"),
+        values = c(Negative = "#ff4444", Positive = "#00C851", Neutral = "#FFdd00"),
         labels = c(Negative = "Negative", Positive = "Positive", Neutral = "Neutral")
       ) +
       # geom_vline(data = events, aes(xintecept = date)) + 
