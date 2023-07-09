@@ -5,6 +5,8 @@ library(lubridate)
 library(bslib)
 library(forcats)
 library(bsicons)
+library(tidyr)
+library(zoo)
 
 # 
 tweets <- readRDS("tweets.rds")
@@ -18,8 +20,8 @@ df <- tweets %>%
   ungroup() %>% 
   mutate(Positive = rollapply(Positive,7,mean,align='right',fill = 0, na.rm = T),
          Negative = rollapply(Negative,7,mean,align='right',fill= 0 , na.rm = T ),
-         Neutral = rollapply(Neutral,7,mean,align='right',fill= 0, na.rm = T)) %>% 
-  pivot_longer(cols =-date ) %>% 
+         Neutral = zoo::rollapply(Neutral,7,mean,align='right',fill= 0, na.rm = T)) %>% 
+  tidyr::pivot_longer(cols =-date ) %>% 
   rename(avg = value,
          VADER_label = name) %>% 
   left_join(tweets %>% 
@@ -34,7 +36,22 @@ df <- tweets %>%
 topic_df <- tweets %>%
   group_by(date, topic) %>%
   summarise(count = n()) %>%
-  ungroup()
+  pivot_wider(names_from = topic, values_from = count) %>%
+  ungroup() %>% 
+  mutate(`Topic 1` = rollapply(`Topic 1`,7,mean,align='right',fill = 0, na.rm = T),
+         `Topic 2` = rollapply(`Topic 2`,7,mean,align='right',fill= 0 , na.rm = T ),
+         `Topic 3` = zoo::rollapply(`Topic 3`,7,mean,align='right',fill= 0, na.rm = T),
+         `Topic 4` = rollapply(`Topic 4`,7,mean,align='right',fill= 0 , na.rm = T ),
+         `Topic 5` = zoo::rollapply(`Topic 5`,7,mean,align='right',fill= 0, na.rm = T)) %>% 
+  tidyr::pivot_longer(cols =-date ) %>% 
+  rename(avg = value,
+         topic = name) %>% 
+  left_join(tweets %>% 
+              group_by(date, topic) %>%
+              summarise(count = as.double(n())), 
+            by = c("date", "topic")
+  )
+
 
 
 
@@ -296,9 +313,9 @@ server <- function(input, output) {
     filtered_topic_df <- filtered_topic_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
-    ggplot(data = filtered_topic_df, aes(x = date, y = count, color = topic, group = topic)) +
-      geom_point() +
-      geom_smooth() +
+    ggplot(data = filtered_topic_df, aes(x = date,color = topic, group = topic)) +
+      geom_point(aes(y = count)) +
+      geom_line(aes(y = avg)) +
       labs(x = "Date", y = "Count of Tweets") +
       scale_color_manual(
         values = c(Negative = "#ff4444", Positive = "#00C851"),
