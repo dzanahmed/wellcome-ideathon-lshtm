@@ -62,7 +62,7 @@ topic_df <- regex %>%
               rename(count = value,
                      topic = name),
             by = c("date", "topic")
-  )
+  ) 
 
 
 
@@ -169,20 +169,20 @@ ui <- page_navbar(
         value = c(min(ymd(tweets$date), na.rm = TRUE), max(ymd(tweets$date), na.rm = TRUE))
       )
     ),
-   nav_panel("Sentiment",
+   nav_panel("Topic",
             layout_column_wrap(
                width = "150px",
                height = "120px",
                fill = FALSE,
                vbs[[1]], vbs[[2]]
              ),
-    
-    card(
-      width = 12,
-      status = "primary",
-      card_header("Sentiment Analysis"),
-      plotOutput("sentimentPlot")
-    ),
+            card(
+              width = 12,
+              status = "primary",
+              card_header("Topic modelling"),
+              plotOutput("topic_time")
+            )
+    ,
     card(
       width = 12,
       status = "primary",
@@ -190,13 +190,14 @@ ui <- page_navbar(
       plotOutput("topicPlot")
     )
   ),
-  nav_panel("Topic", 
+  nav_panel("Sentiment", 
             card(
               width = 12,
               status = "primary",
-              card_header("Topic modelling"),
-              plotOutput("topic_time")
-            )),
+              card_header("Sentiment Analysis"),
+              plotOutput("sentimentPlot")
+            )
+            ),
   
   theme = bs_theme(
     bootswatch = "darkly",
@@ -246,12 +247,18 @@ server <- function(input, output) {
     
     ggplot(data = filtered_df, aes(x = date, color = VADER_label, group = VADER_label)) +
       geom_point(aes(y =count), alpha = 0.5) +
+      geom_line(aes(y= avg))+
+      # This might need to be fixed, we have some flags to be appearable 
+      
+      
       # geom_smooth() +
-      geom_vline(data = filtered_events,aes(xintercept=date), alpha = 0.5) +
-      geom_text(data = filtered_events,
-                mapping = aes(x = date, y = 400 , label = event),
-                inherit.aes = FALSE,
-                hjust = 1)+geom_line(aes(y = avg)) +
+      # geom_vline(data = filtered_events,aes(xintercept=date), alpha = 0.5) +
+      # geom_text(data = filtered_events,
+      #           mapping = aes(x = date, y = 400 , label = event),
+      #           inherit.aes = FALSE,
+      #           hjust = 1)+geom_line(aes(y = avg)) + 
+      
+      
       labs(x = "Date", y = "Count of Tweets", color = "7-day rolling average") +
       scale_color_manual(
         values = c(Negative = "#ff4444", Positive = "#00C851", Neutral = "#FFdd00"),
@@ -335,13 +342,14 @@ server <- function(input, output) {
     
     
       filtered_topic_df <- filtered_topic_df %>%
-        filter(topic%in%input$topic_filter)
+        filter(topic%in%input$topic_filter) #%>% 
+        # filter(VADER_label %in% input$label_filter)
   
     filtered_topic_df <- filtered_topic_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
-    ggplot(data = filtered_topic_df, aes(x = date,color = topic, group = topic)) +
-      geom_point(aes(y = count), alpha = 0.5) +
+    ggplot(data = filtered_topic_df, aes(x = date, color = topic, group = topic)) +
+      # geom_point(aes(y = count), alpha = 0.5) +
       geom_line(aes(y = avg)) +
       labs(x = "Date", y = "Count of Tweets") +
       scale_color_manual(
