@@ -7,9 +7,11 @@ library(forcats)
 library(bsicons)
 library(tidyr)
 library(zoo)
+library(readr)
 
 # 
 tweets <- readRDS("tweets.rds")
+regex <- read_csv("../../data/interim/cascading_regex_filters_results.csv")
 
 
 # Prepare the transformed data
@@ -32,27 +34,43 @@ df <- tweets %>%
   
   
 
-
-topic_df <- tweets %>%
-  group_by(date, topic) %>%
-  summarise(count = n()) %>%
-  pivot_wider(names_from = topic, values_from = count) %>%
+topic_df <- regex %>% 
+  inner_join(tweets %>% select(tweet_id, date, VADER_label), by = "tweet_id") %>% 
+  group_by(date) %>% 
+  summarise(vaccine_filter = sum(vaccine_filter == TRUE),
+            hesitancy_filter = sum(hesitancy_filter == TRUE),
+            safety_filter = sum(safety_filter == TRUE),
+            mistrust_filter = sum(mistrust_filter == TRUE)) %>% 
   ungroup() %>% 
-  mutate(`Topic 1` = rollapply(`Topic 1`,7,mean,align='right',fill = 0, na.rm = T),
-         `Topic 2` = rollapply(`Topic 2`,7,mean,align='right',fill= 0 , na.rm = T ),
-         `Topic 3` = zoo::rollapply(`Topic 3`,7,mean,align='right',fill= 0, na.rm = T),
-         `Topic 4` = rollapply(`Topic 4`,7,mean,align='right',fill= 0 , na.rm = T ),
-         `Topic 5` = zoo::rollapply(`Topic 5`,7,mean,align='right',fill= 0, na.rm = T)) %>% 
+  mutate(vaccine_filter = rollapply(vaccine_filter,7,mean,align='right',fill = 0, na.rm = T),
+         hesitancy_filter = rollapply(hesitancy_filter,7,mean,align='right',fill= 0 , na.rm = T ),
+         safety_filter = zoo::rollapply(safety_filter,7,mean,align='right',fill= 0, na.rm = T),
+         mistrust_filter = rollapply(mistrust_filter,7,mean,align='right',fill= 0 , na.rm = T )
+         ) %>% 
   tidyr::pivot_longer(cols =-date ) %>% 
   rename(avg = value,
          topic = name) %>% 
-  left_join(tweets %>% 
-              group_by(date, topic) %>%
-              summarise(count = as.double(n())), 
+  left_join(regex %>% 
+              inner_join(tweets %>% select(tweet_id, date, VADER_label), by = "tweet_id") %>% 
+              group_by(date) %>% 
+              summarise(vaccine_filter = sum(vaccine_filter == TRUE),
+                        hesitancy_filter = sum(hesitancy_filter == TRUE),
+                        safety_filter = sum(safety_filter == TRUE),
+                        mistrust_filter = sum(mistrust_filter == TRUE)) %>% 
+              ungroup() %>% 
+              tidyr::pivot_longer(cols =-date ) %>% 
+              rename(count = value,
+                     topic = name),
             by = c("date", "topic")
   )
 
 
+
+topic_df %>% 
+  group_by(topic) %>% 
+  summarise(val = sum(count)) %>% 
+  mutate(topic = fct_reorder(topic, val)) %>%
+  ungroup() 
 
 
 events <- data.frame(
@@ -262,28 +280,29 @@ server <- function(input, output) {
 
     filtered_topic_df %>% 
       group_by(topic) %>% 
-      summarise(val = n()) %>% 
+      summarise(val = sum(count)) %>% 
       mutate(topic = fct_reorder(topic, val)) %>%
       ungroup() %>% 
-      ggplot( aes(x=topic, y=val)) +
-      geom_bar(stat="identity",
+    
+      ggplot( aes(x=topic, y=val, fill = topic)) +
+      geom_bar(stat="identity",   
                alpha=.6, width=.4) +
       coord_flip() +
       xlab("") +
       scale_color_manual(
         values = c(
-          "Topic 1" = "#ff4444",
-          "Topic 2" = "#00C851",
-          "Topic 3" = "#FF8800",
-          "Topic 4" = "#FFC400",
-          "Topic 5" = "#4285F4"
+          "vaccine_filter" = "#ff4444",
+          "hesitancy_filter" = "#00C851",
+          "safety_filter" = "#FF8800",
+          "mistrust_filter" = "#FFC400"
+          # "Topic 5" = "#4285F4"
         ),
         labels = c(
-          "Topic 1" = "Topic 1",
-          "Topic 2" = "Topic 2",
-          "Topic 3" = "Topic 3",
-          "Topic 4" = "Topic 4",
-          "Topic 5" = "Topic 5"
+          "Topic 1" = "vaccine_filter",
+          "Topic 2" = "hesitancy_filter",
+          "Topic 3" = "safety_filter",
+          "Topic 4" = "mistrust_filter"
+          # "Topic 5" = "Topic 5"
         )) +
       
       theme(
@@ -314,7 +333,7 @@ server <- function(input, output) {
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
     ggplot(data = filtered_topic_df, aes(x = date,color = topic, group = topic)) +
-      geom_point(aes(y = count)) +
+      geom_point(aes(y = count), alpha = 0.5) +
       geom_line(aes(y = avg)) +
       labs(x = "Date", y = "Count of Tweets") +
       scale_color_manual(
@@ -322,18 +341,18 @@ server <- function(input, output) {
         labels = c(Negative = "Negative", Positive = "Positive")) +
       scale_color_manual(
         values = c(
-          "Topic 1" = "#ff4444",
-          "Topic 2" = "#00C851",
-          "Topic 3" = "#FF8800",
-          "Topic 4" = "#FFC400",
-          "Topic 5" = "#4285F4"
+          "vaccine_filter" = "#ff4444",
+          "hesitancy_filter" = "#00C851",
+          "safety_filter" = "#FF8800",
+          "mistrust_filter" = "#FFC400"
+          # "Topic 5" = "#4285F4"
         ),
         labels = c(
-          "Topic 1" = "Topic 1",
-          "Topic 2" = "Topic 2",
-          "Topic 3" = "Topic 3",
-          "Topic 4" = "Topic 4",
-          "Topic 5" = "Topic 5"
+          "Topic 1" = "vaccine_filter",
+          "Topic 2" = "hesitancy_filter",
+          "Topic 3" = "safety_filter",
+          "Topic 4" = "mistrust_filter"
+          # "Topic 5" = "Topic 5"
         )) +
       theme(
         legend.position = "bottom",
