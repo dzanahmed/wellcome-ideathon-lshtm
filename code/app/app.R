@@ -33,7 +33,7 @@ df <- tweets %>%
   )
   
   
-
+#generating topics from regular expressions
 topic_df <- regex %>% 
   inner_join(tweets %>% select(tweet_id, date, VADER_label), by = "tweet_id") %>% 
   group_by(date) %>% 
@@ -85,6 +85,7 @@ events <- data.frame(
   )
   )
 )
+
 
 
 vbs <- list(
@@ -240,10 +241,17 @@ server <- function(input, output) {
     filtered_df <- filtered_df %>%
       filter(date >= input$date_range[1] & date <= input$date_range[2])
     
+    filtered_events <- events %>% 
+      filter(date >= input$date_range[1] & date <= input$date_range[2])
+    
     ggplot(data = filtered_df, aes(x = date, color = VADER_label, group = VADER_label)) +
       geom_point(aes(y =count), alpha = 0.5) +
       # geom_smooth() +
-      geom_line(aes(y = avg)) +
+      geom_vline(data = filtered_events,aes(xintercept=date), alpha = 0.5) +
+      geom_text(data = filtered_events,
+                mapping = aes(x = date, y = 400 , label = event),
+                inherit.aes = FALSE,
+                hjust = 1)+geom_line(aes(y = avg)) +
       labs(x = "Date", y = "Count of Tweets", color = "7-day rolling average") +
       scale_color_manual(
         values = c(Negative = "#ff4444", Positive = "#00C851", Neutral = "#FFdd00"),
